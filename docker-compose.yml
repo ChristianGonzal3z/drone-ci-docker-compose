@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+  drone-server:
+    image: drone/drone:2
+    ports:
+      - "8000:80"  # Puerto del servidor Drone CI
+      - "8443:443" # Puerto TLS del servidor Drone CI
+    volumes:
+      - /var/lib/drone:/data
+    restart: always
+    environment:
+      - DRONE_SERVER_HOST=your-domain.com
+      - DRONE_SERVER_PROTO=https
+      - DRONE_TLS_AUTOCERT=false
+      - DRONE_RPC_SECRET=your-rpc-secret
+      - DRONE_USER_CREATE=username:your-gitea-username,admin:true
+      - DRONE_PROVIDER=gitea
+      - DRONE_GITEA_SERVER=https://your-gitea-instance-url.com
+      - DRONE_GITEA_CLIENT_ID=your-gitea-client-id
+      - DRONE_GITEA_CLIENT_SECRET=your-gitea-client-secret
+
+  drone-runner:
+    image: drone/drone-runner-docker:1
+    restart: always
+    depends_on:
+      - drone-server
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DRONE_RPC_PROTO=https
+      - DRONE_RPC_HOST=drone-server
+      - DRONE_RPC_SECRET=your-rpc-secret
+      - DRONE_RUNNER_CAPACITY=2
